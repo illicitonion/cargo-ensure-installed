@@ -33,13 +33,13 @@ fn main_impl() -> Result<(), String> {
         "Version requirement to ensure is installed (accepts any valid semver)",
         "0.9.0",
     );
-    flags.reqopt(
+    flags.optopt(
         "",
         "git-url",
         "Git URL to install the specified crate from",
         "https://github.com/pingcap/grpc-rs.git",
     );
-    flags.reqopt(
+    flags.optopt(
         "",
         "git-rev",
         "Git sha to install the specified crate from",

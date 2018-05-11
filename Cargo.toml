@@ -1,6 +1,6 @@
 [package]
 name = "cargo-ensure-installed"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Daniel Wagner-Hall <dawagner@gmail.com>"]
 description = "Like cargo install but if you already have a suitable version, simply leaves it as-is."
 repository = "https://github.com/illicitonion/cargo-ensure-installed"
