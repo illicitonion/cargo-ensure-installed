@@ -33,6 +33,18 @@ fn main_impl() -> Result<(), String> {
         "Version requirement to ensure is installed (accepts any valid semver)",
         "0.9.0",
     );
+    flags.reqopt(
+        "",
+        "git-url",
+        "Git URL to install the specified crate from",
+        "https://github.com/pingcap/grpc-rs.git",
+    );
+    flags.reqopt(
+        "",
+        "git-rev",
+        "Git sha to install the specified crate from",
+        "ccc979370c40892d58cbe3e6f478e77fb4bedd4d",
+    );
     let options = match flags.parse(&std::env::args().collect::<Vec<_>>()) {
         Ok(options) => options,
         Err(err) => return Err(err.to_string()),
@@ -50,6 +62,12 @@ fn main_impl() -> Result<(), String> {
         }
     };
 
+    let git = match (options.opt_str("git-url"), options.opt_str("git-rev")) {
+        (Some(git_url), Some(git_rev)) => Some((git_url, git_rev)),
+        (None, None) => None,
+        _ => return Err(format!("Cannot specify one of git-url and git-rev")),
+    };
+
     let contents = {
         if crates_toml.exists() {
             match read_file_to_string(&crates_toml) {
@@ -64,14 +82,17 @@ fn main_impl() -> Result<(), String> {
     match should_install(&crates_toml, &contents, &package, &want_version) {
         Ok(install) => {
             if install {
-                let status = Command::new("cargo")
-                    .arg("install")
-                    .arg("--force")
-                    .arg("--vers")
-                    .arg(&raw_version)
-                    .arg(&package)
-                    .status()
-                    .unwrap();
+                let mut args = vec!["install", "--force", "--vers", &raw_version, &package];
+                match &git {
+                    &Some(ref git) => {
+                        args.push("--git");
+                        args.push(&git.0);
+                        args.push("--rev");
+                        args.push(&git.1);
+                    }
+                    &None => {}
+                }
+                let status = Command::new("cargo").args(args).status().unwrap();
                 if !status.success() {
                     return Err("Error running cargo install".to_owned());
                 }
